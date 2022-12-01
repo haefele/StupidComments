@@ -1,5 +1,25 @@
 @page "/books"
 
-<p>
-    Books here!
-</p>
+
+@inject CommentsService CommentsService;
+
+<PageTitle>Danis stupid book comments</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">Books</MudText>
+
+@foreach (var book in this._books)
+{
+    <p>@book.Id - @book.Title</p>
+}
+
+@code {
+        private List<Topic> _books = new();
+
+        protected override void OnInitialized()
+        {
+            base.OnInitialized();
+
+            this._books = this.CommentsService.GetTopics(TopicKind.Book);
+        }
+}
+
