@@ -1,16 +1,25 @@
 @page "/books"
 
-
+@inject NavigationManager NavigationManager;
 @inject CommentsService CommentsService;
 
 <PageTitle>Danis stupid book comments</PageTitle>
 
 <MudText Typo="Typo.h3" GutterBottom="true">Books</MudText>
 
-@foreach (var book in this._books)
-{
-    <p>@book.Id - @book.Title</p>
-}
+<MudPaper Outlined="true">
+    <MudList Clickable="true" SelectedValueChanged="@(book => this.SelectedBookChanged((Topic)book))">
+        @foreach (var book in this._books)
+        {
+            <MudListItem Text="@book.Title" Value="@book" />
+
+            @if (book != this._books[^1])
+            {
+                <MudDivider />
+            }
+        }
+    </MudList>
+</MudPaper>
 
 @code {
         private List<Topic> _books = new();
@@ -20,6 +29,11 @@
             base.OnInitialized();
 
             this._books = this.CommentsService.GetTopics(TopicKind.Book);
+        }
+
+        private void SelectedBookChanged(Topic book)
+        {
+            this.NavigationManager.NavigateTo($"/topics/{book.Kind}/{book.Id}");
         }
 }
 

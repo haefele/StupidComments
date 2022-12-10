@@ -1,0 +1,29 @@
+@page "/topics/{Kind}/{Id:int}"
+
+@inject NavigationManager NavigationManager;
+@inject CommentsService CommentsService;
+
+@this._topic.Title;
+
+@code {
+
+    private Topic _topic = default!;
+
+    [Parameter]
+    public string? Kind { get; set; }
+
+    [Parameter]
+    public int Id { get; set; }
+
+    protected override void OnInitialized()
+    {
+        if (Enum.TryParse<TopicKind>(this.Kind, ignoreCase: true, out var kind) is false)
+            this.NavigationManager.NavigateTo("/");
+
+        var topic = this.CommentsService.GetTopic(this.Id);
+        if (topic is null)
+            this.NavigationManager.NavigateTo("/");
+
+        this._topic = topic;
+    }
+}
