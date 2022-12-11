@@ -3,11 +3,28 @@
 @inject NavigationManager NavigationManager;
 @inject CommentsService CommentsService;
 
-@this._topic.Title;
+<PageTitle>Danis stupid comments - @this._topic.Title</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">@this._topic.Title</MudText>
+
+
+@foreach (var commentRange in this._topicCommentNumbersByRange)
+{
+    <MudText Typo="Typo.h6" Class="my-2">@commentRange.Range</MudText>
+
+    <div class="d-flex flex-wrap gap-5">
+    @foreach (var commentNumber in commentRange.CommentNumbers)
+    {
+        <MudButton Variant="Variant.Filled" Class="comment-button">@commentNumber</MudButton>
+    }
+    </div>
+}
+
 
 @code {
 
     private Topic _topic = default!;
+    private List<(int Range, List<int> CommentNumbers)> _topicCommentNumbersByRange = new();
 
     [Parameter]
     public string? Kind { get; set; }
@@ -25,5 +42,9 @@
             this.NavigationManager.NavigateTo("/");
 
         this._topic = topic;
+        this._topicCommentNumbersByRange = this._topic.Comments
+            .GroupBy(f => f.Number / 100)
+            .Select(f => (f.Key * 100, f.Select(d => d.Number).ToList()))
+            .ToList();
     }
 }
