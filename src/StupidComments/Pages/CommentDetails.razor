@@ -1,0 +1,73 @@
+@page "/topics/{Kind}/{Id:int}/comment/{CommentId:int}"
+
+@inject NavigationManager NavigationManager;
+@inject CommentsService CommentsService;
+
+<PageTitle>Danis stupid comments - @this._topic.Title</PageTitle>
+
+<MudText Typo="Typo.h3" GutterBottom="true">@this._topic.Title</MudText>
+
+<div class="d-flex justify-space-between">
+    <div class="other-comment-button">
+        @if (this._previousComment is not null)
+        {
+            <MudButton Variant="Variant.Filled" Class="comment-button" OnClick="@(() => this.ShowComment(this._previousComment.Number))">@this._previousComment.Number</MudButton>
+        }
+    </div>
+
+    <MudText Typo="Typo.h6" Class="my-2">@this._comment.Number</MudText>
+    
+    <div class="other-comment-button">
+        @if (this._nextComment is not null)
+        {
+            <MudButton Variant="Variant.Filled" Class="comment-button" OnClick="@(() => this.ShowComment(this._nextComment.Number))">@this._nextComment.Number</MudButton>
+        }
+    </div>
+</div>
+
+<MudText Typo="Typo.body1" Class="my-2">@this._comment.Comment</MudText>
+
+
+@code {
+
+    private Topic _topic = default!;
+    private CommentItem _comment = default!;
+
+    private CommentItem? _previousComment;
+    private CommentItem? _nextComment;
+
+    [Parameter]
+    public string? Kind { get; set; }
+
+    [Parameter]
+    public int Id { get; set; }
+
+    [Parameter]
+    public int CommentId { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (Enum.TryParse<TopicKind>(this.Kind, ignoreCase: true, out var kind) is false)
+            this.NavigationManager.NavigateTo("/");
+
+        var topic = this.CommentsService.GetTopic(this.Id);
+        if (topic is null)
+            this.NavigationManager.NavigateTo("/");
+
+        this._topic = topic;
+
+        var comment = this._topic.Comments.FirstOrDefault(f => f.Number == this.CommentId);
+        if (comment is null)
+            this.NavigationManager.NavigateTo("/");
+
+        this._comment = comment;
+
+        this._previousComment = this._topic.Comments.OrderByDescending(f => f.Number).FirstOrDefault(f => f.Number < this.CommentId);
+        this._nextComment = this._topic.Comments.OrderBy(f => f.Number).FirstOrDefault(f => f.Number > this.CommentId);
+    }
+
+    private void ShowComment(int commentNumber)
+    {        
+        this.NavigationManager.NavigateTo($"/topics/{this._topic.Kind}/{this._topic.Id}/comment/{commentNumber}");
+    }
+}

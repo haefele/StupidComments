@@ -15,7 +15,7 @@
     <div class="d-flex flex-wrap gap-5">
     @foreach (var commentNumber in commentRange.CommentNumbers)
     {
-        <MudButton Variant="Variant.Filled" Class="comment-button">@commentNumber</MudButton>
+        <MudButton Variant="Variant.Filled" Class="comment-button" OnClick="@(() => this.ShowComment(commentNumber))" >@commentNumber</MudButton>
     }
     </div>
 }
@@ -46,5 +46,10 @@
             .GroupBy(f => f.Number / 100)
             .Select(f => (f.Key * 100, f.Select(d => d.Number).ToList()))
             .ToList();
+    }
+
+    private void ShowComment(int commentNumber)
+    {        
+        this.NavigationManager.NavigateTo($"/topics/{this._topic.Kind}/{this._topic.Id}/comment/{commentNumber}");
     }
 }
