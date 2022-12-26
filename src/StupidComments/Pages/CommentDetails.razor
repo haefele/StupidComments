@@ -15,7 +15,10 @@
         }
     </div>
 
-    <MudText Typo="Typo.h6" Class="my-2">@this._comment.Number</MudText>
+    <MudTooltip Text="Whether you've seen this comment before or not. Will automatically be set after 10 seconds."
+                Placement="Placement.Top">
+        <MudCheckBox T="bool" Checked="@this._thisCommentIsSeen" CheckedChanged="this.CommentIsSeenChanged"><MudText Typo="Typo.h6" Class="my-2">@this._comment.Number</MudText></MudCheckBox>
+    </MudTooltip>
     
     <div class="other-comment-button">
         @if (this._nextComment is not null)
@@ -27,14 +30,17 @@
 
 <MudText Typo="Typo.body1" Class="my-2">@this._comment.Comment</MudText>
 
-
 @code {
+
+    private readonly Timer _timer;
 
     private Topic _topic = default!;
     private CommentItem _comment = default!;
 
     private CommentItem? _previousComment;
     private CommentItem? _nextComment;
+
+    private bool _thisCommentIsSeen = false;
 
     [Parameter]
     public string? Kind { get; set; }
@@ -45,7 +51,12 @@
     [Parameter]
     public int CommentId { get; set; }
 
-    protected override void OnParametersSet()
+    public CommentDetails()
+    {
+        this._timer = new Timer(this.OnTick);
+    }
+
+    protected override async Task OnParametersSetAsync()
     {
         if (Enum.TryParse<TopicKind>(this.Kind, ignoreCase: true, out var kind) is false)
             this.NavigationManager.NavigateTo("/");
@@ -64,10 +75,45 @@
 
         this._previousComment = this._topic.Comments.OrderByDescending(f => f.Number).FirstOrDefault(f => f.Number < this.CommentId);
         this._nextComment = this._topic.Comments.OrderBy(f => f.Number).FirstOrDefault(f => f.Number > this.CommentId);
+
+        this._thisCommentIsSeen = await this.CommentsService.IsCommentSeen(this.Id, this.CommentId);
+        if (this._thisCommentIsSeen)
+        {
+            this._timer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        }
+        else
+        {
+            this._timer.Change(TimeSpan.FromSeconds(10), Timeout.InfiniteTimeSpan);
+        }
     }
 
     private void ShowComment(int commentNumber)
     {        
         this.NavigationManager.NavigateTo($"topics/{this._topic.Kind}/{this._topic.Id}/comment/{commentNumber}");
+    }
+
+    private async void OnTick(object? state)
+    {
+        await this.InvokeAsync(async () => 
+        {
+            this._thisCommentIsSeen = true;
+            this.StateHasChanged();
+
+            await this.CommentIsSeenChanged(true);
+        });
+    }
+
+    private async Task CommentIsSeenChanged(bool isSeen)
+    {
+        if (isSeen)
+        {
+            await this.CommentsService.MarkCommentAsSeen(this.Id, this.CommentId);
+        }
+        else 
+        {
+            await this.CommentsService.MarkCommentAsNotSeen(this.Id, this.CommentId);
+        }
+
+        this._thisCommentIsSeen = isSeen;
     }
 }

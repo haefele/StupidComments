@@ -15,7 +15,10 @@
     <div class="d-flex flex-wrap gap-5">
     @foreach (var commentNumber in commentRange.CommentNumbers)
     {
-        <MudButton Variant="Variant.Filled" Class="comment-button" OnClick="@(() => this.ShowComment(commentNumber))" >@commentNumber</MudButton>
+        <MudButton Variant="Variant.Filled" 
+                   Class="comment-button" 
+                   Color="@(this._seenComments.Contains(commentNumber) ? Color.Success : Color.Default)"
+                   OnClick="@(() => this.ShowComment(commentNumber))" >@commentNumber</MudButton>
     }
     </div>
 }
@@ -25,6 +28,7 @@
 
     private Topic _topic = default!;
     private List<(int Range, List<int> CommentNumbers)> _topicCommentNumbersByRange = new();
+    private List<int> _seenComments = new();
 
     [Parameter]
     public string? Kind { get; set; }
@@ -32,7 +36,7 @@
     [Parameter]
     public int Id { get; set; }
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         if (Enum.TryParse<TopicKind>(this.Kind, ignoreCase: true, out var kind) is false)
             this.NavigationManager.NavigateTo("/");
@@ -46,6 +50,8 @@
             .GroupBy(f => f.Number / 100)
             .Select(f => (f.Key * 100, f.Select(d => d.Number).ToList()))
             .ToList();
+
+        this._seenComments = await this.CommentsService.GetSeenComments(this.Id);
     }
 
     private void ShowComment(int commentNumber)

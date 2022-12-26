@@ -1,3 +1,5 @@
+using Blazored.LocalStorage;
+
 namespace StupidComments.Shared;
 
 public class CommentsService
@@ -66,6 +68,13 @@ public class CommentsService
         })
     };
 
+    private readonly ILocalStorageService _localStorageService;
+
+    public CommentsService(ILocalStorageService localStorageService)
+    {
+        this._localStorageService = localStorageService;
+    }
+
     public List<Topic> GetTopics(TopicKind kind)
     {
         return this._allTopics.Where(f => f.Kind == kind).ToList();
@@ -74,6 +83,44 @@ public class CommentsService
     public Topic GetTopic(int id)
     {
         return this._allTopics.First(f => f.Id == id);
+    }
+
+    public async Task MarkCommentAsSeen(int topicId, int commentNumber)
+    {
+        var key = this.GetSeenCommentsKey(topicId);
+
+        var seenComments = await this._localStorageService.GetItemAsync<List<int>>(key) ?? new List<int>();
+
+        if (seenComments.Contains(commentNumber) is false)
+            seenComments.Add(commentNumber);
+
+        await this._localStorageService.SetItemAsync<List<int>>(key, seenComments);
+    }
+    public async Task MarkCommentAsNotSeen(int topicId, int commentNumber)
+    {
+        var key = this.GetSeenCommentsKey(topicId);
+
+        var seenComments = await this._localStorageService.GetItemAsync<List<int>>(key) ?? new List<int>();
+
+        seenComments.Remove(commentNumber);
+
+        await this._localStorageService.SetItemAsync<List<int>>(key, seenComments);
+    }
+    public async Task<List<int>> GetSeenComments(int topicId)
+    {
+        var key = this.GetSeenCommentsKey(topicId);
+
+        return await this._localStorageService.GetItemAsync<List<int>>(key) ?? new List<int>();
+    }
+    public async Task<bool> IsCommentSeen(int topicId, int commentNumber)
+    {
+        var seenComments = await this.GetSeenComments(topicId);
+        return seenComments.Contains(commentNumber);
+    }
+
+    private string GetSeenCommentsKey(int topicId)
+    {
+        return $"seen-comments-topic-{topicId}";
     }
 }
 
