@@ -1,0 +1,28 @@
+name: build and deploy
+
+on:
+  push:
+    branches: [ "main" ]
+
+permissions:
+  contents: write
+  
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Publish
+      run: dotnet publish --no-restore -c Release
+    - name: Deploy
+      uses: JamesIves/github-pages-deploy-action@4
+      with:
+        folder: src/StupidComments/bin/Release/net6.0/publish/wwwroot
