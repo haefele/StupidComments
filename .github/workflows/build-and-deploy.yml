@@ -7,6 +7,9 @@ on:
 permissions:
   contents: write
   
+env:
+  artifacts_dir: src/StupidComments/bin/Release/net6.0/publish/wwwroot
+  
 jobs:
   build:
 
@@ -23,10 +26,10 @@ jobs:
     - name: Publish
       run: dotnet publish --no-restore -c Release
     - name: Change base-tag in index.html from / to StupidComments
-      run: sed -i 's/<base href="\/" \/>/<base href="\/StupidComments\/" \/>/g' src/StupidComments/bin/Release/net6.0/publish/wwwroot/index.html
+      run: sed -i 's/<base href="\/" \/>/<base href="\/StupidComments\/" \/>/g' $artifacts_dir/index.html
     - name: Add .nojekyll file
-      run: touch release/wwwroot/.nojekyll
+      run: touch $artifacts_dir/.nojekyll
     - name: Deploy
       uses: JamesIves/github-pages-deploy-action@v4
       with:
-        folder: src/StupidComments/bin/Release/net6.0/publish/wwwroot
+        folder: ${{ env.artifacts_dir }}
