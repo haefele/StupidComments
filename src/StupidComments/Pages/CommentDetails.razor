@@ -1,11 +1,15 @@
 @page "/topics/{Kind}/{Id:int}/comment/{CommentId:int}"
 
+@implements IDisposable
+
 @inject NavigationManager NavigationManager;
 @inject CommentsService CommentsService;
 
 <PageTitle>Danis stupid comments - @this._topic.Title</PageTitle>
 
-<MudText Typo="Typo.h3" GutterBottom="true">@this._topic.Title</MudText>
+<a href="@($"topics/{this._topic.Kind}/{this._topic.Id}")">
+    <MudText Typo="Typo.h3" GutterBottom="true">@this._topic.Title</MudText>
+</a>
 
 <div class="d-flex justify-space-between">
     <div class="other-comment-button">
@@ -115,5 +119,10 @@
         }
 
         this._thisCommentIsSeen = isSeen;
+    }
+
+    public void Dispose()
+    {
+        this._timer.Dispose();
     }
 }
