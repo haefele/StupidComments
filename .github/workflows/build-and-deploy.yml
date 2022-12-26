@@ -29,6 +29,8 @@ jobs:
       run: sed -i 's/<base href="\/" \/>/<base href="\/StupidComments\/" \/>/g' $artifacts_dir/index.html
     - name: Add .nojekyll file
       run: touch $artifacts_dir/.nojekyll
+    - name: copy index.html to 404.html
+      run: cp $artifacts_dir/index.html $artifacts_dir/404.html
     - name: Deploy
       uses: JamesIves/github-pages-deploy-action@v4
       with:
